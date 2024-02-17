@@ -1,12 +1,18 @@
+import express from "express";
+import cors from "cors";
+import http from "http";
 import { Server } from "socket.io";
 
-const io = new Server({
+const app = express();
+app.use(cors());
+const server = http.createServer(app);
+
+const io = new Server(server, {
   cors: {
     origin: "*",
   },
 });
-
-io.listen(3001);
+const PORT = process.env.PORT || 3001;
 
 const characters = [];
 
@@ -20,6 +26,11 @@ function generateRandomRGB() {
   return r;
 }
 
+app.get("/", (req, res) => {
+  res.write(`<h1>Socket IO Start on Port : ${PORT}</h1>`);
+  res.end();
+});
+
 //whenever a new user connects to server, this event will be triggered
 io.on("connection", (socket) => {
   console.log("user connected");
@@ -31,7 +42,7 @@ io.on("connection", (socket) => {
     g: generateRandomRGB(),
     b: generateRandomRGB(),
   });
-  console.log(characters);
+  
   socket.emit("hello");
   io.emit("characters", characters);
   socket.on("disconnect", () => {
@@ -42,4 +53,8 @@ io.on("connection", (socket) => {
     );
     io.emit("characters", characters);
   });
+});
+
+server.listen(PORT, () => {
+  console.log("listening on *:3000");
 });
