@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
+import { log } from "console";
 
 const app = express();
 app.use(cors());
@@ -14,7 +15,7 @@ const io = new Server(server, {
 });
 const PORT = process.env.PORT || 3001;
 
-const characters = [];
+let characters = [];
 
 const generateRandomPosition = () => {
   return [Math.random() * 6, 0, Math.random() * 6];
@@ -41,10 +42,17 @@ io.on("connection", (socket) => {
     r: generateRandomRGB(),
     g: generateRandomRGB(),
     b: generateRandomRGB(),
+    animation: "Twerk",
   });
-  
+
   socket.emit("hello");
   io.emit("characters", characters);
+
+  socket.on("animationChanged", (value) => {
+    characters = value;
+    io.emit("characters", characters);
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected", characters);
     characters.splice(
